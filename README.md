@@ -6,8 +6,93 @@
 博客地址：https://blog.csdn.net/appleyk
 
 本篇博客地址：https://blog.csdn.net/Appleyk/article/details/101530203
+## hnalyc - sso 生产使用
 
-## license.app
+备注:输入y 是确定
+
+1、首先要用KeyTool工具来生成密钥库：（-alias别名 –validity 3650表示10年有效）
+keytool -genkey -alias hnalycPrivatekeys -keysize 1024 -keystore hnalycPrivatekeys.store -validity 2
+
+
+密钥迁移至安全模式：
+keytool -importkeystore -srckeystore hnalycPrivatekeys.store -destkeystore hnalycPrivatekeys.store -deststoretype pkcs12
+
+2、然后将密钥库中名称为‘hnalycPrivatekeys’的证书条目导出到证书文件hnalycCertfile.cer中：
+keytool -export -alias hnalycPrivatekeys -file hnalycCertfile.cer -keystore hnalycPrivatekeys.store
+
+3、然后再把这个证书文件的信息导入到公钥库中别名为hnalycPublicCert的证书条目中：
+keytool -import -alias hnalycPublicCert -file hnalycCertfile.cer -keystore hnalycPublicCert.store
+
+最后生成的文件privateKeys.store和publicCerts.store拷贝出来备用。
+
+4.修改配置文件
+  4.1 license-app\license-verify-app-test\src\main\resources\application-verify.properties
+#证书主题
+springboot.license.verify.subject=hnalyc
+#公钥库证书条目别名
+springboot.license.verify.publicAlias=hnalycPublicCert
+#证书公钥库存储路径(公钥库可以公开出去，但是私有密钥库一定要自己保存好，即私有密钥库要保存在creator模块中)
+springboot.license.verify.publicKeysStorePath=/hnalycPublicCert.store
+#证书公钥库访问密码
+springboot.license.verify.storePass=问管理员
+#证书存放路径
+springboot.license.verify.licensePath=classpath:license.lic
+
+  4.2 src\main\resources\application.properties
+
+#证书名称
+license.subject=hnalyc
+#公钥别名
+license.publicAlias=hnalycPublicCert
+#公钥库所在的位置
+license.publicKeysStorePath=/hnalycPublicCert.store
+#公钥库访问密码
+license.storePass=问管理员
+#证书所在的位置
+license.licensePath =F:\\MartinProject\\license\\license.lic
+
+5.获取硬件信息: http://127.0.0.1:8080/license/getServerInfos
+
+6.生产许可证书: http://127.0.0.1:8080/license/generate
+
+7.下载许可证书: http://127.0.0.1:8080/license/download
+
+备注：补充6，生成证书的请求参数（json）：
+
+```json
+{
+    "subject": "hnalyc",
+    "privateAlias": "hnalycPrivatekeys",
+    "keyPass": "问管理员",
+    "storePass": "问管理员",
+    "privateKeysStorePath": "/hnalycPrivatekeys.store",
+    "issuedTime": "2020-05-01 08:30:00",
+    "expiryTime": "2021-05-01 08:30:00",
+    "description": "HNALYC-SSO系统软件许可证书",
+    "licenseCheck": {
+        "ipAddress": [
+            "127.0.0.1",
+            "127.0.0.1",
+            "127.0.0.1"
+        ],
+        "macAddress": [
+            "00-00-00-00-00-00",
+            "00-00-00-00-00-00",
+            "00-00-00-00-00-00"
+        ],
+        "cpuSerial": "BFEBFBFF000206D7",
+        "mainBoardSerial": "MB-201706282017",
+        "registerAmount": 100,
+        "macCheck": false,
+        "boardCheck": false,
+        "cpuCheck": false,
+        "ipCheck": false,
+        "registerCheck": true
+    }
+}
+```
+
+## license.app 测试使用
 
 软件许可应用（WebApp，主要用于引入license模块，便于测试）
 

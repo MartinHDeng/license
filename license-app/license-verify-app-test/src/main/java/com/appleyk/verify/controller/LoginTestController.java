@@ -2,6 +2,9 @@ package com.appleyk.verify.controller;
 
 import com.appleyk.core.result.ResponseResult;
 import com.appleyk.verify.annotion.VLicense;
+import com.appleyk.verify.entity.User;
+import com.appleyk.verify.service.LoginTestService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,46 +19,16 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/user")
 public class LoginTestController {
+    @Autowired
+    private LoginTestService loginTestService;
 
-    @VLicense
     @PostMapping("/login")
     public ResponseResult checkLicense(@RequestBody User user){
-        if("admin".equals(user.getUserName()) && "admin".equals(user.getPassword())){
-           return ResponseResult.ok("登陆成功！");
+        if(loginTestService.checkLicense(user)){
+            return ResponseResult.ok("登陆成功！");
         }else{
             return ResponseResult.fail("用户名或密码不对！");
         }
-    }
-}
-
-class User {
-
-    private String userName ;
-    private String password ;
-
-    public User(){
-
-    }
-
-    public User(String userName, String password) {
-        this.userName = userName;
-        this.password = password;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }
 
